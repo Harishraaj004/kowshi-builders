@@ -36,13 +36,24 @@ Concretely, here's what changes and what doesn't:
     one-file change.
 """
 
+import os
+
 import psycopg
 from psycopg.rows import dict_row
 
 from app.config import DATABASE_URL
 
 
-def get_connection() -> psycopg.Connection:
+def _is_pooled(url: str) -> bool:
+    return "-pooler." in url
+
+
+def _direct_url() -> str:
+    """Non-pooled URL: Neon's DATABASE_URL_UNPOOLED, else DATABASE_URL minus "-pooler"."""
+    return os.getenv("DATABASE_URL_UNPOOLED") or DATABASE_URL.replace("-pooler.", ".", 1)
+
+
+def get_connection(direct: bool = False) -> psycopg.Connection:
     """
     Opens a fresh connection to the Postgres database.
 
@@ -67,9 +78,19 @@ def get_connection() -> psycopg.Connection:
     # exist in this database's default "public" schema (it already has its
     # own `projects`, for instance). Chat `messages` stays in public and is
     # always referred to as public.messages below.
-    return psycopg.connect(
-        DATABASE_URL, row_factory=dict_row, options="-c search_path=dashboard,public"
-    )
+    #
+    # Neon's pooled endpoint (host contains "-pooler", PgBouncer) rejects
+    # startup options, so there we connect without them and rely on a
+    # ROLE-level search_path that init_db() sets once over a direct
+    # connection (see _direct_url / init_db). Non-pooled URLs (local
+    # Postgres, Neon direct) keep using the startup option.
+    if direct or not _is_pooled(DATABASE_URL):
+        return psycopg.connect(
+            _direct_url() if direct else DATABASE_URL,
+            row_factory=dict_row,
+            options="-c search_path=dashboard,public",
+        )
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 
 # Accounts, quotes, projects, appointments and documents. Everything the
@@ -185,7 +206,9 @@ def init_db() -> None:
     a previous run. Called once below, at MODULE IMPORT TIME, so the
     table is guaranteed to exist before any route tries to use it.
     """
-    with get_connection() as connection:
+    # direct=True: schema setup must see search_path=dashboard,public even
+    # when the app itself runs through Neon's pooler.
+    with get_connection(direct=True) as connection:
         # A quick tour of this table's columns (identical MEANING to the
         # SQLite version - only the exact type names changed):
         #   id          - SERIAL is Postgres's auto-incrementing integer
@@ -234,6 +257,8 @@ def init_db() -> None:
         # also does NOT close the connection - we still do that
         # ourselves below, once we're done with it.
         connection.execute("CREATE SCHEMA IF NOT EXISTS dashboard")
+        # Persist the search_path on the role so pooled connections get it.
+        connection.execute("ALTER ROLE CURRENT_USER SET search_path = dashboard, public")
         connection.execute(SCHEMA_SQL)
         connection.commit()
     connection.close()

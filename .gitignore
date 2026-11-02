@@ -57,3 +57,5 @@ frontend/node_modules/
 
 # Customer-uploaded approval documents (see app/config.py UPLOAD_DIR).
 uploads/
+.neon
+node_modules/
