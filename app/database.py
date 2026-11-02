@@ -49,9 +49,12 @@ def _is_pooled(url: str) -> bool:
 
 
 def _direct_url() -> str:
-    """Non-pooled URL: Neon's DATABASE_URL_UNPOOLED, else DATABASE_URL minus "-pooler"."""
-    unpooled = os.getenv("DATABASE_URL_UNPOOLED", "").strip().strip("\"'")
-    return unpooled or DATABASE_URL.replace("-pooler.", ".", 1)
+    """Non-pooled URL, derived from DATABASE_URL (Neon: same login, host minus "-pooler").
+
+    Deliberately NOT read from a second env var, so one connection string is
+    the single source of truth (no stale/mismatched copies).
+    """
+    return DATABASE_URL.replace("-pooler.", ".", 1)
 
 
 def get_connection(direct: bool = False) -> psycopg.Connection:

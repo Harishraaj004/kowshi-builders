@@ -68,7 +68,7 @@ Never commit `.env`; it is git-ignored.
 
 1. Create a hosted Postgres database reachable from the internet (e.g. [Neon](https://neon.tech), Supabase or Vercel Postgres) and copy its connection string (use `?sslmode=require`).
 2. Go to [vercel.com/new](https://vercel.com/new), import `Harishraaj004/kowshi-builders-chat-agent`. Framework preset: **Other**; leave build/output settings empty.
-3. Add the environment variables above (at least `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `COOKIE_SECURE=true`, SMTP settings, and `UPLOAD_DIR=/tmp/uploads`).
+3. Add the environment variables above (at least `ANTHROPIC_API_KEY`, `DATABASE_URL` (Neon pooled string), `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `COOKIE_SECURE=true`, SMTP settings, and `UPLOAD_DIR=/tmp/uploads`).
 4. Deploy. Every push to `main` redeploys automatically.
 
 Or from the CLI: `npm i -g vercel && vercel --prod`.
