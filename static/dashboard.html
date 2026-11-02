@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Your Project Dashboard - Sri Kowshi Builders</title>
+    <link rel="icon" type="image/svg+xml" href="/static/images/logo-mark.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="/static/style.css?v=13" />
+</head>
+<body class="min-h-screen bg-bg font-sans text-ink antialiased">
+    <!-- Dark brand band: header + welcome line. The main content card area
+         below pulls up over its bottom edge (-mt-16) for a layered look. -->
+    <div class="bg-blueprint relative bg-dark pb-24 text-white">
+        <header class="border-b border-white/10">
+            <div class="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+                <a href="/" class="flex items-center gap-3 no-underline" aria-label="Sri Kowshi Builders - home">
+                    <img src="/static/images/logo-mark.svg" alt="" class="h-9 w-auto" width="64" height="48" />
+                    <span class="flex flex-col leading-none">
+                        <span class="font-display text-[1.05rem] font-bold tracking-[0.04em] text-gold-gradient">SRI KOWSHI</span>
+                        <span class="mt-1 text-[0.58rem] font-semibold tracking-[0.42em] text-gold/80">BUILDERS</span>
+                    </span>
+                </a>
+                <div class="flex items-center gap-3 text-sm">
+                    <span id="user-initial" class="flex h-9 w-9 items-center justify-center rounded-full bg-gold-gradient text-sm font-bold text-dark" aria-hidden="true"></span>
+                    <span class="hidden flex-col leading-tight sm:flex">
+                        <span id="user-name" class="font-semibold"></span>
+                        <span id="user-role" class="text-xs capitalize text-gold"></span>
+                    </span>
+                    <button id="logout" type="button" class="ml-1 rounded-xl border border-white/20 px-3.5 py-2 font-semibold text-white transition hover:border-gold hover:text-gold-light">Sign out</button>
+                </div>
+            </div>
+        </header>
+        <div class="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
+            <p class="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.2em] text-gold">Project Dashboard</p>
+            <h1 class="m-0 text-[1.9rem] font-extrabold tracking-tight md:text-[2.4rem]">Welcome back<span id="greeting-name"></span></h1>
+            <p id="greeting-sub" class="mt-2 max-w-[560px] text-dark-muted">Track every stage of your build &mdash; from quote to handover &mdash; in one place.</p>
+        </div>
+    </div>
+
+    <main class="relative mx-auto -mt-16 max-w-7xl px-4 pb-16 sm:px-6">
+        <div id="app"><div class="rounded-3xl border border-border bg-surface p-8 text-ink-muted shadow-[0_20px_50px_rgba(12,26,22,0.08)]">Loading&hellip;</div></div>
+    </main>
+
+    <footer class="border-t border-border py-6 text-center text-xs text-ink-muted">
+        &copy; 2026 Sri Kowshi Builders &middot; <span class="text-accent-dark">Building Better Tomorrows</span>
+    </footer>
+
+    <div id="toast" hidden role="status"></div>
+    <script type="module" src="/static/dashboard.js?v=4"></script>
+</body>
+</html>

@@ -1,79 +1,83 @@
-# Kowshi Builders - Chat Agent (Learning Project)
+# Kowshi Builders – AI Chat Agent
 
-This is a from-scratch, stage-by-stage learning project. The end goal is a
-website with an AI chat agent for a construction business, but we're
-building every layer ourselves, in order, so nothing is a black box.
+A website for a construction business with an AI chat agent (Claude), customer accounts, a project dashboard and an admin console.
 
-See the project plan / full staged roadmap in the chat history with
-Claude - this README only documents what's actually built so far.
+**Stack:** FastAPI · PostgreSQL (psycopg 3) · Anthropic Claude API · TypeScript + Tailwind CSS (compiled to `static/`) · deployable on Vercel.
 
-## Stage 1 - plumbing, no AI
+## Features
 
-**Goal:** understand, end to end, how a browser talks to a Python backend
-over HTTP/JSON - before any LLM, database, or framework magic gets added.
+- **Chat agent** powered by Claude with a deterministic `estimate_construction_quote` tool (`app/tools.py`) and persistent conversation history.
+- **Accounts:** email signup/login with emailed verification codes, optional Google Sign-In.
+- **Customer dashboard** (`/dashboard`): projects, appointments, approval-document uploads.
+- **Admin console** (`/admin`): clients, appointments (accept / request change), user and engineer management.
 
-```
-Browser (HTML/CSS/JS)  --fetch()-->  FastAPI  -->  Python function  -->  JSON response
-```
-
-### What's here
+## Project layout
 
 ```
-app/
-  __init__.py     # marks "app" as an importable Python package
-  main.py         # the FastAPI backend: routes, request/response shapes
-static/
-  index.html      # page structure
-  style.css       # page appearance
-  script.js       # page behaviour (talks to the backend via fetch)
-requirements.txt  # third-party Python packages this project needs
-.gitignore        # files Git should never track (venv, caches, .env)
+api/index.py        Vercel serverless entrypoint (re-exports the FastAPI app)
+app/                FastAPI backend (main, auth, admin, projects, llm, tools, database, config, emailer)
+frontend/           TypeScript + Tailwind sources and build tooling
+static/             HTML pages and compiled JS/CSS served by FastAPI
+vercel.json         Vercel routing / bundling config
+.env.example        Template of all environment variables
 ```
 
-There is no database, no LLM, and no persistence yet. The `/api/chat`
-route just echoes back whatever you type, prefixed with "You said:" - the
-whole point of Stage 1 is to see the real request/response cycle working,
-with nothing hidden behind it.
+## Run locally
 
-### Running it
+Prerequisites: Python 3.11+, Node 18+, a PostgreSQL database, an [Anthropic API key](https://console.anthropic.com/settings/keys).
 
 ```bash
-# 1. Activate the virtual environment (created once with: python -m venv .venv)
-.venv\Scripts\activate
+git clone https://github.com/Harishraaj004/kowshi-builders-chat-agent.git
+cd kowshi-builders-chat-agent
 
-# 2. Install dependencies (only needed once, or after requirements.txt changes)
+python -m venv .venv
+# Windows: .venv\Scripts\activate    macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Start the server. --reload restarts it automatically whenever you
-#    save a change to app/main.py during development.
+cp .env.example .env     # then fill in ANTHROPIC_API_KEY, DATABASE_URL, admin settings
 uvicorn app.main:app --reload --port 8000
 ```
 
-Then open:
-- `http://localhost:8000/` - the chat UI
-- `http://localhost:8000/api/health` - a plain JSON health check
-- `http://localhost:8000/docs` - FastAPI's auto-generated interactive API docs
+Open http://localhost:8000 (chat), `/dashboard`, `/admin`, and `/docs` (API docs). Tables are created automatically on startup.
 
-### Concepts covered in this stage
+### Changing the frontend
 
-- Python virtual environments (`.venv`) and why we isolate project
-  dependencies per-project instead of installing everything globally
-- `requirements.txt` as a reproducible dependency list
-- HTTP requests/responses, and the specific methods GET vs POST
-- JSON as the data format frontend and backend agree on
-- FastAPI routes, and how Pydantic (`BaseModel`) validates request/response
-  shapes automatically
-- Serving static files (HTML/CSS/JS) from a Python backend
-- The DOM, event listeners, and `fetch()` in plain JavaScript
-- Why business logic and secrets belong on the backend, never the frontend
-- `.gitignore` and why generated/machine-specific files shouldn't be
-  committed to version control
+```bash
+cd frontend
+npm install
+npm run build        # or: npm run watch:css / npm run watch:js
+```
 
-### Not yet covered (later stages)
+Compiled files in `static/` are committed so the Vercel deploy needs no Node build — commit them after rebuilding.
 
-- Calling an LLM API (Stage 2)
-- Conversation memory across messages (Stage 3)
-- Deterministic construction calculators as callable "tools" (Stage 4)
-- Retrieval-augmented generation over our own documents (Stage 5)
-- LangGraph-based agent orchestration (Stage 6)
-- A production frontend framework, auth, and deployment (Stage 7)
+## Environment variables
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | yes | Claude API key |
+| `DATABASE_URL` | yes | PostgreSQL URL (`postgresql://user:pass@host:5432/db`) |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | yes | Admin console login (created/updated on each start) |
+| `ADMIN_EMAILS` | no | Comma-separated emails promoted to admin on signup |
+| `GOOGLE_CLIENT_ID` | no | Enables Google Sign-In |
+| `COOKIE_SECURE` | prod | Set `true` on HTTPS |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | prod | Sends verification codes; if `SMTP_HOST` is empty, codes print to the server log |
+| `UPLOAD_DIR` | no | Where uploaded documents are stored (default `uploads`) |
+
+Never commit `.env`; it is git-ignored.
+
+## Deploy to Vercel
+
+1. Create a hosted Postgres database reachable from the internet (e.g. [Neon](https://neon.tech), Supabase or Vercel Postgres) and copy its connection string (use `?sslmode=require`).
+2. Go to [vercel.com/new](https://vercel.com/new), import `Harishraaj004/kowshi-builders-chat-agent`. Framework preset: **Other**; leave build/output settings empty.
+3. Add the environment variables above (at least `ANTHROPIC_API_KEY`, `DATABASE_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `COOKIE_SECURE=true`, SMTP settings, and `UPLOAD_DIR=/tmp/uploads`).
+4. Deploy. Every push to `main` redeploys automatically.
+
+Or from the CLI: `npm i -g vercel && vercel --prod`.
+
+**Serverless caveats**
+- Uploaded documents are written to `/tmp`, which is **ephemeral** on Vercel. For durable uploads, move storage to S3 / Vercel Blob (see `app/projects.py`).
+- If you use Google Sign-In, add your Vercel domain to the OAuth client's authorized JavaScript origins.
+
+## License
+
+Private learning project.

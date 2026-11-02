@@ -1,0 +1,21 @@
+{
+  "name": "kowshi-builders-frontend",
+  "private": true,
+  "//": "This package.json exists ONLY for frontend build tooling - dev dependencies that turn our TypeScript/Tailwind SOURCE files (in frontend/src/) into the plain .js/.css files the browser actually loads, which land in ../static/ where FastAPI already serves them from. No backend code lives here, and this package is never 'installed' by anything else - it's a local toolbox, not a published library.",
+
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ../static/style.css --minify",
+    "build:js": "tsc",
+    "build": "npm run build:css && npm run build:js",
+
+    "//watch": "The two watch scripts below re-run their build automatically every time you save a source file - run each in its own terminal tab while developing, alongside `uvicorn app.main:app --reload` in a third. There's no bundler dev-server here (deliberately - see the README) so this is the whole 'watch mode' story.",
+    "watch:css": "tailwindcss -i ./src/input.css -o ../static/style.css --watch",
+    "watch:js": "tsc --watch"
+  },
+
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,210 @@
+/*
+  frontend/src/input.css
+  ========================
+  This is the SOURCE file for our stylesheet - not what the browser loads
+  (that's ../static/style.css, generated FROM this file by the Tailwind
+  CLI - see package.json's "build:css" script).
+
+  HOW TAILWIND IS DIFFERENT FROM THE CSS WE WROTE BY HAND BEFORE:
+  --------------------------------------------------------------------
+  Until now, every class in style.css was something WE invented and
+  defined ourselves (.hero, .service-card, .btn-primary, ...) - one rule
+  per concept, then we combined properties (padding, color, radius) by
+  hand inside each rule.
+
+  Tailwind flips that: instead of inventing a class name and writing CSS
+  properties inside it, you compose small, single-purpose "utility"
+  classes DIRECTLY in your HTML - e.g. `class="flex items-center gap-2
+  rounded-lg bg-accent px-4 py-2"` instead of a hand-written `.btn-primary`
+  rule. The Tailwind CLI scans every HTML/TS file for class names that
+  match its utilities and generates ONLY the CSS those exact classes need
+  - nothing unused ships to the browser.
+
+  This file's job is mostly to define OUR design tokens (colors, fonts,
+  custom animations) so the generated utility classes use OUR palette
+  (e.g. `bg-accent` uses our brand color) instead of Tailwind's defaults,
+  plus a handful of small custom rules for things utility classes don't
+  cover well (keyframe animations, the scroll-reveal effect).
+*/
+
+/* This one line pulls in Tailwind's entire utility system - every class
+   like flex, grid, px-4, rounded-lg, hover:scale-105, etc. Without this,
+   none of the utility classes used across index.html would generate any
+   CSS at all. */
+@import "tailwindcss";
+
+/* Tailwind generates CSS only for class names it actually finds by
+   scanning your project's files - it can't know a utility like `bg-bg`
+   is "used" unless it sees the literal text `bg-bg` somewhere. By
+   default it auto-scans the project folder IT'S RUN FROM (here,
+   frontend/) and everything below it - which includes main.ts, but NOT
+   ../static/index.html, since that file lives OUTSIDE frontend/
+   entirely. Without this line, every utility class used ONLY in
+   index.html (bg-bg, bg-accent, ...) would silently generate no CSS at
+   all - exactly the bug that made the whole page render with a
+   transparent background the first time we built this. @source tells
+   Tailwind about an extra file/pattern to scan, outside its automatic
+   heuristics. */
+@source "../../static/index.html";
+@source "../../static/dashboard.html";
+@source "../../static/admin.html";
+
+/* --- Design tokens -------------------------------------------------------
+   Tailwind v4's "CSS-first" config: variables declared inside an @theme
+   block automatically become utility classes. Naming a variable
+   --color-accent (note the required --color- prefix) makes `bg-accent`,
+   `text-accent`, `border-accent`, etc. all available for free - we never
+   separately "register" a color, the naming convention IS the
+   registration. These are the exact same values our old hand-written
+   style.css used, just expressed the Tailwind way. */
+@theme {
+    /* Brand palette taken from the Sri Kowshi Builders logo
+       (static/images/logo.webp): a deep green-black ground with brushed
+       gold. "accent" is the gold, darkened just enough to stay readable
+       as text/buttons on the light page; "gold" is the brighter tone for
+       use ON dark backgrounds only. */
+    --color-bg: #f7f5f0;
+    --color-surface: #ffffff;
+    --color-ink: #0f1d19;
+    --color-ink-muted: #5d6a65;
+    --color-border: #e5e0d5;
+
+    --color-accent: #a37a2c;
+    --color-accent-dark: #7a5a17;
+    --color-accent-light: #f6efdd;
+
+    --color-gold: #d9b45e;
+    --color-gold-light: #f3d98b;
+
+    --color-dark: #0c1a16;
+    --color-dark-2: #132621;
+    --color-dark-muted: #a7b4ae;
+
+    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-display: "Cinzel", Georgia, "Times New Roman", serif;
+
+    /* Same idea as colors above: naming a variable --animate-* generates
+       an `animate-*` utility class that plays the given keyframes (the
+       keyframes themselves are defined further down this file, the same
+       way plain CSS always has). This is what lets us write
+       class="animate-float" directly in HTML further below, without a
+       separate CSS rule for every animated element. */
+    --animate-fade-up: fade-up 0.6s ease-out both;
+    --animate-float: float 4s ease-in-out infinite;
+}
+
+/* --- Keyframes (plain CSS - Tailwind doesn't reinvent this) -------------- */
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes typing-bounce {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+
+/* --- Scroll-reveal effect -------------------------------------------------
+   Elements start invisible/shifted-down (.reveal), and main.ts's
+   IntersectionObserver ADDS the .is-visible class the first time each
+   element scrolls into view - which is what actually triggers the fade
+   -in-and-rise via the `transition` below.
+
+   We use a CSS TRANSITION here (a smooth change between two STATES)
+   rather than the @keyframes animation above, specifically so we only
+   ever need to ADD a class, never remove one. Compare this to the
+   `hidden`-attribute bug from the previous stage's chat widget: there, a
+   plain class fought with an HTML attribute at EQUAL specificity, and
+   whichever was declared later in the file won - a fragile trap. Here,
+   `.reveal.is-visible` (two classes together) is MORE specific than
+   `.reveal` alone by definition, so it reliably wins regardless of
+   declaration order, with no fighting and no fragile ordering to
+   remember. */
+.reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* The three dots shown in a chat bubble while we're waiting for Claude's
+   reply (see showTypingIndicator() in main.ts). Each dot uses the same
+   keyframes but a different `animation-delay`, which is what makes them
+   bounce in a staggered wave instead of all three moving in lockstep. */
+.typing-dot {
+    animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+
+/* --- Brand gold ------------------------------------------------------------
+   The logo's brushed-gold look: a diagonal gradient clipped to the text
+   (for the wordmark + hero headline accent) or used as a fill (buttons,
+   dividers). Utility classes can't express background-clip:text with a
+   multi-stop gradient as readably as this. */
+.text-gold-gradient {
+    background: linear-gradient(120deg, #9c7425 0%, #d9b45e 45%, #f3d98b 60%, #b88a33 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.bg-gold-gradient {
+    background: linear-gradient(120deg, #b88a33 0%, #e2c070 50%, #a37a2c 100%);
+}
+
+/* Faint architectural grid used behind the dark CTA panel - a nod to
+   blueprint paper without needing another photo. */
+.bg-blueprint {
+    background-image:
+        linear-gradient(rgba(217, 180, 94, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(217, 180, 94, 0.07) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 88px;
+}
+
+/* Mobile menu uses <details> so it needs no JS; hide the default marker. */
+details.mobile-nav > summary::-webkit-details-marker {
+    display: none;
+}
+details.mobile-nav > summary {
+    list-style: none;
+}

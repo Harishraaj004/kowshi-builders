@@ -1,73 +1,603 @@
 <!--
   static/index.html
   ==================
-  This is the file the browser loads first when you visit the site. It
-  defines the STRUCTURE of the page - what elements exist and how they're
-  nested - while style.css controls how it LOOKS, and script.js controls
-  how it BEHAVES (reacts to clicks, talks to the backend, updates itself).
+  The marketing homepage for "Sri Kowshi Builders," with the chat agent
+  embedded as a floating widget. LOOK = Tailwind utilities (compiled from
+  frontend/src/input.css into style.css), BEHAVIOUR = frontend/src/main.ts
+  (compiled to main.js). This file is just STRUCTURE.
 
-  Structure / style / behaviour, kept in three separate files, is a
-  deliberate convention in web dev - it means you (or anyone else) can
-  redesign the look without touching the logic, or change the logic
-  without touching the markup.
+  Branding follows the company logo (static/images/logo.webp): deep
+  green-black + brushed gold, Cinzel for the wordmark, Plus Jakarta Sans
+  for everything else. static/images/logo-mark.svg is a vector version of
+  the building mark for small sizes / light backgrounds.
+
+  Ids (#chat-panel, #messages, #auth-modal, ...) and data-open-chat /
+  data-open-auth attributes are hooks main.ts looks up - keep them when
+  restyling. The "reveal" class triggers the scroll-in animation.
 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <!-- Without this, mobile browsers assume the page was built for a wide
-         desktop screen and shrink everything down. This line tells the
-         browser: "match the viewport width to the actual device width,
-         and don't zoom in by default." -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kowshi Builders - Chat (Stage 1)</title>
+    <title>Sri Kowshi Builders - Construction & Renovation in Chennai</title>
+    <meta name="description" content="Sri Kowshi Builders - home construction, renovation and interiors in Chennai. Building better tomorrows." />
+    <link rel="icon" type="image/svg+xml" href="/static/images/logo-mark.svg" />
 
-    <!-- This tells the browser to fetch our CSS file as a SEPARATE HTTP
-         request (to /static/style.css), served by the StaticFiles mount
-         we set up in app/main.py. Open your browser's Network tab while
-         loading this page and you'll see that request happen. -->
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
+
+    <!-- Bump "?v=" whenever style.css or main.js changes (cache-busting). -->
+    <link rel="stylesheet" href="/static/style.css?v=13" />
 </head>
-<body>
-    <!-- One container <main> for the whole chat widget, so we can center
-         and size it as a single block in CSS. -->
-    <main class="chat-app">
-        <header>
-            <h1>Kowshi Builders</h1>
-            <p class="subtitle">Stage 1 - plain HTTP/JSON plumbing. No AI yet.</p>
-        </header>
+<body class="bg-bg font-sans text-ink antialiased">
 
-        <!-- Empty on page load. script.js will append a new <div> in here
-             for every message (yours and the backend's canned reply).
-             aria-live="polite" is an accessibility hint: it tells screen
-             readers "announce new content added here, but don't interrupt
-             whatever the user is currently doing." -->
-        <section id="messages" class="messages" aria-live="polite"></section>
+    <!-- ============================== HEADER ============================== -->
+    <header class="sticky top-0 z-50 border-b border-border/70 bg-bg/85 backdrop-blur-md" id="top">
+        <div class="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-6 px-4 sm:px-6">
+            <a href="#top" class="flex shrink-0 items-center gap-3 no-underline" aria-label="Sri Kowshi Builders - home">
+                <img src="/static/images/logo-mark.svg" alt="" class="h-10 w-auto" width="64" height="48" />
+                <span class="flex flex-col leading-none">
+                    <span class="font-display text-[1.05rem] font-bold sm:text-[1.15rem] tracking-[0.04em] text-gold-gradient">SRI KOWSHI</span>
+                    <span class="mt-1 text-[0.62rem] font-semibold tracking-[0.42em] text-ink-muted">BUILDERS</span>
+                </span>
+            </a>
 
-        <!-- Wrapping the input + button in a <form> means the browser
-             handles "press Enter to submit" for us automatically, and
-             gives script.js a single "submit" event to listen for instead
-             of separately handling Enter-key-presses and button-clicks. -->
-        <form id="chat-form" class="chat-form">
-            <input
-                id="chat-input"
-                type="text"
-                placeholder="Type a message..."
-                autocomplete="off"
-                required
-            />
-            <button type="submit">Send</button>
-        </form>
+            <nav class="hidden flex-1 justify-center gap-8 lg:flex" aria-label="Primary">
+                <a href="#top" class="relative py-2 text-[0.92rem] font-semibold text-ink after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-accent">Home</a>
+                <a href="#about" class="py-2 text-[0.92rem] font-medium text-ink-muted transition hover:text-ink">About</a>
+                <a href="#services" class="py-2 text-[0.92rem] font-medium text-ink-muted transition hover:text-ink">Services</a>
+                <a href="#projects" class="py-2 text-[0.92rem] font-medium text-ink-muted transition hover:text-ink">Projects</a>
+                <a href="#contact" class="py-2 text-[0.92rem] font-medium text-ink-muted transition hover:text-ink">Contact</a>
+            </nav>
+
+            <div class="flex shrink-0 items-center gap-2 sm:gap-4">
+                <a id="auth-link" href="#" data-open-auth class="hidden text-[0.92rem] font-semibold text-ink-muted hover:text-ink sm:inline">Sign in</a>
+                <button
+                    data-open-chat
+                    class="group hidden shrink-0 items-center gap-2 rounded-xl bg-dark px-4 py-2.5 sm:inline-flex text-[0.9rem] font-semibold text-white shadow-[0_8px_24px_rgba(12,26,22,0.25)] transition hover:-translate-y-0.5 hover:bg-dark-2 sm:px-5 sm:py-3"
+                >
+                    Get a Free Quote
+                    <svg class="h-4 w-4 text-gold transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </button>
+
+                <!-- Mobile menu: <details> toggles open/closed without JS. -->
+                <details class="mobile-nav relative lg:hidden">
+                    <summary class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-border bg-surface" aria-label="Open menu">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                    </summary>
+                    <nav class="absolute right-0 mt-2 flex w-52 flex-col rounded-2xl border border-border bg-surface p-2 shadow-[0_16px_40px_rgba(12,26,22,0.14)]" aria-label="Mobile">
+                        <a href="#top" class="rounded-lg px-3 py-2.5 text-sm font-semibold hover:bg-bg">Home</a>
+                        <a href="#about" class="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-muted hover:bg-bg hover:text-ink">About</a>
+                        <a href="#services" class="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-muted hover:bg-bg hover:text-ink">Services</a>
+                        <a href="#projects" class="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-muted hover:bg-bg hover:text-ink">Projects</a>
+                        <a href="#contact" class="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-muted hover:bg-bg hover:text-ink">Contact</a>
+                        <a href="#" data-open-auth class="mt-1 rounded-lg border-t border-border px-3 py-2.5 text-sm font-semibold text-accent-dark hover:bg-bg sm:hidden">Sign in</a>
+                    </nav>
+                </details>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- ============================== HERO ============================== -->
+        <!-- Full-bleed photo on the right that fades into the page colour on
+             the left, so the headline sits on a clean background while the
+             house still fills most of the first screen. -->
+        <section class="relative overflow-hidden">
+            <div class="absolute inset-y-0 right-0 hidden w-[62%] md:block">
+                <img
+                    src="/static/images/hero-house.jpg"
+                    alt="A modern two-storey home with warm interior lighting at dusk"
+                    class="h-full w-full object-cover"
+                    loading="eager"
+                    width="1200"
+                    height="800"
+                />
+                <div class="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-dark/60 to-transparent"></div>
+                <div class="absolute inset-0 bg-linear-to-r from-bg via-bg/50 to-transparent"></div>
+            </div>
+
+            <div class="relative mx-auto grid max-w-7xl gap-10 px-4 pt-10 pb-16 sm:px-6 md:min-h-[640px] md:grid-cols-[1fr_1fr] md:pt-20 md:pb-24">
+                <div class="reveal flex flex-col justify-center">
+                    <span class="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-accent/30 bg-accent-light px-3.5 py-1.5 text-xs font-semibold tracking-wide text-accent-dark">
+                        <span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+                        Building Better Tomorrows &middot; Chennai
+                    </span>
+                    <h1 class="text-[2.6rem] leading-[1.04] font-extrabold tracking-[-0.03em] sm:text-[3.4rem] lg:text-[4.1rem]">
+                        Your Vision.<br />
+                        Our Expertise.<br />
+                        <span class="text-gold-gradient">A Better Space.</span>
+                    </h1>
+                    <p class="mt-6 max-w-[460px] text-[1.08rem] leading-relaxed text-ink-muted">
+                        Construction and renovation for homes and commercial
+                        spaces across Chennai &mdash; delivered with quality,
+                        transparency and trust.
+                    </p>
+                    <div class="mt-9 flex flex-wrap items-center gap-5">
+                        <button
+                            data-open-chat
+                            class="group inline-flex items-center gap-2.5 rounded-xl bg-dark px-7 py-4 font-semibold text-white shadow-[0_12px_30px_rgba(12,26,22,0.28)] transition hover:-translate-y-0.5 hover:bg-dark-2"
+                        >
+                            Get a Free Quote
+                            <svg class="h-4 w-4 text-gold transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                        </button>
+                        <a href="#projects" class="group inline-flex items-center gap-3 font-semibold text-ink">
+                            <span class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ink/80 transition group-hover:border-accent group-hover:bg-accent group-hover:text-white">
+                                <svg class="ml-0.5 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" /></svg>
+                            </span>
+                            <span class="leading-tight">See Our Work<small class="block text-xs font-medium text-ink-muted">Recent projects</small></span>
+                        </a>
+                    </div>
+
+                    <dl class="mt-12 grid max-w-[480px] grid-cols-3 divide-x divide-border">
+                        <div class="pr-4">
+                            <dt class="text-[1.3rem] font-extrabold tracking-tight whitespace-nowrap sm:text-[1.6rem]">100<span class="text-accent">+</span></dt>
+                            <dd class="m-0 text-[0.8rem] text-ink-muted">Projects Completed</dd>
+                        </div>
+                        <div class="px-4">
+                            <dt class="text-[1.3rem] font-extrabold tracking-tight whitespace-nowrap sm:text-[1.6rem]">5<span class="text-accent">&#9733;</span></dt>
+                            <dd class="m-0 text-[0.8rem] text-ink-muted">Client Satisfaction</dd>
+                        </div>
+                        <div class="pl-4">
+                            <dt class="text-[1.3rem] font-extrabold tracking-tight whitespace-nowrap sm:text-[1.6rem]">On-Time</dt>
+                            <dd class="m-0 text-[0.8rem] text-ink-muted">Project Delivery</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Mobile-only hero photo (desktop uses the full-bleed one above). -->
+                <div class="reveal relative md:hidden">
+                    <img src="/static/images/hero-house.jpg" alt="" aria-hidden="true" class="aspect-4/3 w-full rounded-3xl object-cover shadow-[0_16px_40px_rgba(12,26,22,0.18)]" width="1200" height="800" />
+                </div>
+
+                <!-- Floating glass cards over the desktop photo. -->
+                <div class="relative hidden md:block">
+                    <div class="reveal absolute top-0 right-0 flex items-center gap-3 rounded-2xl border border-white/40 bg-white/75 px-4 py-3 shadow-[0_12px_30px_rgba(12,26,22,0.15)] backdrop-blur-md" style="transition-delay: 200ms">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-dark text-gold">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" /></svg>
+                        </span>
+                        <span class="text-xs leading-snug font-semibold text-ink">Homes<br />Renovations<br />Extensions</span>
+                    </div>
+
+                    <p class="reveal absolute right-0 bottom-24 text-right font-display text-[1.6rem] leading-tight font-semibold text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]" style="transition-delay: 300ms">
+                        Better Spaces<br /><span class="text-gold-light">Happier People</span>
+                    </p>
+
+                    <button
+                        data-open-chat
+                        class="reveal animate-float group absolute bottom-0 left-0 flex items-center gap-4 rounded-2xl bg-white/90 p-2.5 pr-5 text-left shadow-[0_20px_50px_rgba(12,26,22,0.25)] backdrop-blur-md"
+                        style="transition-delay: 400ms"
+                    >
+                        <img src="/static/images/project-living-room.jpg" alt="" class="h-16 w-20 rounded-xl object-cover" width="160" height="128" />
+                        <span class="text-sm leading-snug font-bold text-ink">Turn your ideas<br />into reality</span>
+                        <span class="ml-2 flex h-9 w-9 items-center justify-center rounded-full border border-border transition group-hover:border-accent group-hover:bg-accent group-hover:text-white">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== SERVICES ============================== -->
+        <section class="px-4 py-20 sm:px-6 md:py-24" id="services">
+            <div class="mx-auto max-w-7xl">
+                <div class="flex flex-wrap items-end justify-between gap-6">
+                    <div class="reveal">
+                        <p class="mb-3 text-[0.75rem] font-bold tracking-[0.2em] text-accent uppercase">Our Services</p>
+                        <h2 class="text-[2rem] font-extrabold tracking-tight md:text-[2.6rem]">What We Do</h2>
+                    </div>
+                    <p class="reveal max-w-[380px] text-[0.98rem] text-ink-muted">
+                        From new builds to renovations, we create spaces that
+                        are functional, beautiful and built to last.
+                    </p>
+                    <button data-open-chat class="reveal group inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:border-ink">
+                        Ask About a Service
+                        <svg class="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                    </button>
+                </div>
+
+                <!-- Photo-topped cards; the icon badge overlaps the photo edge.
+                     Increasing transition-delay = left-to-right stagger. -->
+                <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+                    <article class="reveal group overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_4px_24px_rgba(12,26,22,0.05)] transition hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(12,26,22,0.12)]" style="transition-delay: 0ms">
+                        <div class="aspect-[4/3] overflow-hidden"><img src="/static/images/project-modern-home.jpg" alt="Modern white two-storey home" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="1000" height="750" /></div>
+                        <div class="relative px-5 pt-9 pb-5">
+                            <span class="absolute -top-7 left-5 flex h-14 w-14 items-center justify-center rounded-full border-4 border-surface bg-dark text-gold shadow-md">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" /></svg>
+                            </span>
+                            <h3 class="text-[1.05rem] font-bold">Home Construction</h3>
+                            <p class="mt-1.5 text-[0.88rem] leading-relaxed text-ink-muted">Build your dream home from the ground up, with quality and care.</p>
+                        </div>
+                    </article>
+
+                    <article class="reveal group overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_4px_24px_rgba(12,26,22,0.05)] transition hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(12,26,22,0.12)]" style="transition-delay: 80ms">
+                        <div class="aspect-[4/3] overflow-hidden"><img src="/static/images/project-living-room.jpg" alt="Renovated bright living room" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="1000" height="750" /></div>
+                        <div class="relative px-5 pt-9 pb-5">
+                            <span class="absolute -top-7 left-5 flex h-14 w-14 items-center justify-center rounded-full border-4 border-surface bg-dark text-gold shadow-md">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 1 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2z" /></svg>
+                            </span>
+                            <h3 class="text-[1.05rem] font-bold">Home Renovation</h3>
+                            <p class="mt-1.5 text-[0.88rem] leading-relaxed text-ink-muted">Modernise and upgrade your existing space without starting over.</p>
+                        </div>
+                    </article>
+
+                    <article class="reveal group overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_4px_24px_rgba(12,26,22,0.05)] transition hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(12,26,22,0.12)]" style="transition-delay: 160ms">
+                        <div class="aspect-[4/3] overflow-hidden"><img src="/static/images/project-bathroom.jpg" alt="Elegant modern interior" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="1000" height="750" /></div>
+                        <div class="relative px-5 pt-9 pb-5">
+                            <span class="absolute -top-7 left-5 flex h-14 w-14 items-center justify-center rounded-full border-4 border-surface bg-dark text-gold shadow-md">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6H4z" /><path d="M6 10V7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3" /><path d="M4 18v2M20 18v2" /></svg>
+                            </span>
+                            <h3 class="text-[1.05rem] font-bold">Interior Work</h3>
+                            <p class="mt-1.5 text-[0.88rem] leading-relaxed text-ink-muted">Functional, stylish interiors designed around how you live.</p>
+                        </div>
+                    </article>
+
+                    <article class="reveal group overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_4px_24px_rgba(12,26,22,0.05)] transition hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(12,26,22,0.12)]" style="transition-delay: 240ms">
+                        <div class="aspect-[4/3] overflow-hidden"><img src="/static/images/project-kitchen.jpg" alt="Modern white kitchen with marble counters" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="1000" height="750" /></div>
+                        <div class="relative px-5 pt-9 pb-5">
+                            <span class="absolute -top-7 left-5 flex h-14 w-14 items-center justify-center rounded-full border-4 border-surface bg-dark text-gold shadow-md">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21v-4M17 21v-4M5 17h14" /><path d="M9 17V9a3 3 0 0 1 3-3" /><path d="M12 6h5a2 2 0 0 1 2 2v2" /></svg>
+                            </span>
+                            <h3 class="text-[1.05rem] font-bold">Kitchen &amp; Bathroom</h3>
+                            <p class="mt-1.5 text-[0.88rem] leading-relaxed text-ink-muted">Modern, practical fit-outs built for everyday family living.</p>
+                        </div>
+                    </article>
+
+                    <article class="reveal group overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_4px_24px_rgba(12,26,22,0.05)] transition hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(12,26,22,0.12)] sm:col-span-2 lg:col-span-1" style="transition-delay: 320ms">
+                        <div class="aspect-[4/3] overflow-hidden sm:aspect-[8/3] lg:aspect-[4/3]"><img src="/static/images/cta-background.jpg" alt="Home with landscaped garden lit at dusk" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="1600" height="1067" /></div>
+                        <div class="relative px-5 pt-9 pb-5">
+                            <span class="absolute -top-7 left-5 flex h-14 w-14 items-center justify-center rounded-full border-4 border-surface bg-dark text-gold shadow-md">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4c-9 0-16 7-16 16 9 0 16-7 16-16Z" /><path d="M5 19 15 9" /></svg>
+                            </span>
+                            <h3 class="text-[1.05rem] font-bold">Outdoor Spaces</h3>
+                            <p class="mt-1.5 text-[0.88rem] leading-relaxed text-ink-muted">Verandas, decks, gates and compound walls that finish the picture.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== ABOUT + PROCESS ============================== -->
+        <section class="bg-surface px-4 py-20 sm:px-6 md:py-24" id="about">
+            <div class="mx-auto max-w-7xl">
+                <!-- Brand panel: the actual logo artwork sits on its own
+                     green-black ground, so we give it a matching panel. -->
+                <div class="reveal grid overflow-hidden rounded-3xl bg-dark text-white md:grid-cols-[0.9fr_1.1fr]">
+                    <div class="relative min-h-[260px] bg-[#0f211b]">
+                        <img src="/static/images/logo.webp" alt="Sri Kowshi Builders logo - Building Better Tomorrows" class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="1402" height="1122" />
+                    </div>
+                    <div class="flex flex-col justify-center p-8 md:p-12">
+                        <p class="mb-3 text-[0.75rem] font-bold tracking-[0.2em] text-gold uppercase">About Us</p>
+                        <h2 class="text-[1.8rem] leading-tight font-extrabold tracking-tight md:text-[2.3rem]">Building better tomorrows, one home at a time.</h2>
+                        <p class="mt-5 leading-relaxed text-dark-muted">
+                            Sri Kowshi Builders is a Chennai construction and
+                            renovation company built on three promises: honest
+                            pricing, honest timelines, and craftsmanship that
+                            lasts. From the first sketch to the final key, a
+                            single team stays accountable for your project.
+                        </p>
+                        <ul class="mt-7 grid gap-3 sm:grid-cols-2">
+                            <li class="flex items-center gap-3 text-sm font-medium"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-gold/15 text-gold"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg></span>Transparent, itemised quotes</li>
+                            <li class="flex items-center gap-3 text-sm font-medium"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-gold/15 text-gold"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg></span>Qualified site engineers</li>
+                            <li class="flex items-center gap-3 text-sm font-medium"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-gold/15 text-gold"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg></span>Regular progress updates</li>
+                            <li class="flex items-center gap-3 text-sm font-medium"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-gold/15 text-gold"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg></span>Workmanship guarantee</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-20 flex flex-wrap items-end justify-between gap-6">
+                    <div class="reveal">
+                        <p class="mb-3 text-[0.75rem] font-bold tracking-[0.2em] text-accent uppercase">Our Process</p>
+                        <h2 class="text-[2rem] font-extrabold tracking-tight md:text-[2.6rem]">Simple. Transparent. <span class="text-accent">Hassle-Free.</span></h2>
+                    </div>
+                    <p class="reveal max-w-[380px] text-[0.98rem] text-ink-muted">
+                        We keep you involved at every step, with clear
+                        communication and no hidden costs.
+                    </p>
+                </div>
+
+                <ol class="mt-12 grid list-none gap-6 p-0 sm:grid-cols-2 lg:grid-cols-4">
+                    <li class="reveal group relative flex gap-4 rounded-2xl border border-border bg-bg p-5 transition hover:border-accent/50 hover:bg-surface hover:shadow-[0_16px_36px_rgba(12,26,22,0.08)]" style="transition-delay: 0ms">
+                        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface text-accent-dark shadow-sm ring-1 ring-border transition group-hover:bg-dark group-hover:text-gold">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" /></svg>
+                        </span>
+                        <div>
+                            <span class="text-sm font-bold text-accent">01</span>
+                            <h3 class="text-[1.02rem] font-bold">Discuss Your Needs</h3>
+                            <p class="mt-1 text-[0.86rem] leading-relaxed text-ink-muted">Share your ideas, budget and requirements &mdash; with our team or our chat assistant.</p>
+                        </div>
+                    </li>
+                    <li class="reveal group relative flex gap-4 rounded-2xl border border-border bg-bg p-5 transition hover:border-accent/50 hover:bg-surface hover:shadow-[0_16px_36px_rgba(12,26,22,0.08)]" style="transition-delay: 80ms">
+                        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface text-accent-dark shadow-sm ring-1 ring-border transition group-hover:bg-dark group-hover:text-gold">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6M8 13h8M8 17h5" /></svg>
+                        </span>
+                        <div>
+                            <span class="text-sm font-bold text-accent">02</span>
+                            <h3 class="text-[1.02rem] font-bold">Plan &amp; Design</h3>
+                            <p class="mt-1 text-[0.86rem] leading-relaxed text-ink-muted">Get a clear plan, material choices and a cost estimate before work begins.</p>
+                        </div>
+                    </li>
+                    <li class="reveal group relative flex gap-4 rounded-2xl border border-border bg-bg p-5 transition hover:border-accent/50 hover:bg-surface hover:shadow-[0_16px_36px_rgba(12,26,22,0.08)]" style="transition-delay: 160ms">
+                        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface text-accent-dark shadow-sm ring-1 ring-border transition group-hover:bg-dark group-hover:text-gold">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 12-8.5 8.5a2.1 2.1 0 0 1-3-3L12 9" /><path d="M17.6 15 22 10.6 13.4 2 9 6.4z" /></svg>
+                        </span>
+                        <div>
+                            <span class="text-sm font-bold text-accent">03</span>
+                            <h3 class="text-[1.02rem] font-bold">Build</h3>
+                            <p class="mt-1 text-[0.86rem] leading-relaxed text-ink-muted">Our skilled team brings the plan to life, with regular progress updates.</p>
+                        </div>
+                    </li>
+                    <li class="reveal group relative flex gap-4 rounded-2xl border border-border bg-bg p-5 transition hover:border-accent/50 hover:bg-surface hover:shadow-[0_16px_36px_rgba(12,26,22,0.08)]" style="transition-delay: 240ms">
+                        <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface text-accent-dark shadow-sm ring-1 ring-border transition group-hover:bg-dark group-hover:text-gold">
+                            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" /></svg>
+                        </span>
+                        <div>
+                            <span class="text-sm font-bold text-accent">04</span>
+                            <h3 class="text-[1.02rem] font-bold">Handover</h3>
+                            <p class="mt-1 text-[0.86rem] leading-relaxed text-ink-muted">Move into a space you'll love, backed by our workmanship guarantee.</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- ============================== PROJECTS ============================== -->
+        <section class="px-4 py-20 sm:px-6 md:py-24" id="projects">
+            <div class="mx-auto max-w-7xl">
+                <div class="flex flex-wrap items-end justify-between gap-6">
+                    <div class="reveal">
+                        <p class="mb-3 text-[0.75rem] font-bold tracking-[0.2em] text-accent uppercase">Recent Projects</p>
+                        <h2 class="text-[2rem] font-extrabold tracking-tight md:text-[2.6rem]">Real Spaces. <span class="text-accent">Real Results.</span></h2>
+                    </div>
+                    <button data-open-chat class="reveal group inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-5 py-3 text-sm font-semibold transition hover:border-ink">
+                        Start Your Project
+                        <svg class="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                    </button>
+                </div>
+
+                <!-- Photos: free-licence images from Unsplash (hotlinked) standing in for
+                     real project photos - replace with your own site photos. -->
+                <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    <article class="reveal group" style="transition-delay: 0ms">
+                        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                            <img src="https://images.unsplash.com/photo-1790250121647-bf52e33b2d12?auto=format&fit=crop&w=900&h=675&q=80" alt="Modern two-storey house with a terracotta-tiled balcony and warm evening lighting" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="900" height="675" />
+                            <span class="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-md transition group-hover:bg-dark group-hover:text-gold">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                            </span>
+                        </div>
+                        <h3 class="mt-4 text-base font-bold">Contemporary Duplex</h3>
+                        <p class="mt-0.5 text-[0.85rem] text-ink-muted">4 BHK &bull; 2,800 sq ft &bull; Anna Nagar, Chennai</p>
+                    </article>
+                    <article class="reveal group" style="transition-delay: 80ms">
+                        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                            <img src="https://images.unsplash.com/photo-1722421492323-eaf9c401befe?auto=format&fit=crop&w=900&h=675&q=80" alt="Three-storey modern house with stone cladding and balconies at dusk" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="900" height="675" />
+                            <span class="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-md transition group-hover:bg-dark group-hover:text-gold">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                            </span>
+                        </div>
+                        <h3 class="mt-4 text-base font-bold">G+2 Family Residence</h3>
+                        <p class="mt-0.5 text-[0.85rem] text-ink-muted">3 floors &bull; 3,600 sq ft &bull; Velachery, Chennai</p>
+                    </article>
+                    <article class="reveal group" style="transition-delay: 160ms">
+                        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                            <img src="https://images.unsplash.com/photo-1712806377231-256e4a1f0a8e?auto=format&fit=crop&w=900&h=675&q=80" alt="White contemporary two-storey house with a car parked outside" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="900" height="675" />
+                            <span class="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-md transition group-hover:bg-dark group-hover:text-gold">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                            </span>
+                        </div>
+                        <h3 class="mt-4 text-base font-bold">Modern Independent House</h3>
+                        <p class="mt-0.5 text-[0.85rem] text-ink-muted">3 BHK &bull; 2,100 sq ft &bull; OMR, Chennai</p>
+                    </article>
+                    <article class="reveal group" style="transition-delay: 240ms">
+                        <div class="relative aspect-[4/3] overflow-hidden rounded-2xl">
+                            <img src="https://images.unsplash.com/photo-1744094982586-c70f736bda12?auto=format&fit=crop&w=900&h=675&q=80" alt="Modern two-storey home lit at night with a covered car porch" class="h-full w-full object-cover transition duration-700 group-hover:scale-110" loading="lazy" width="900" height="675" />
+                            <span class="absolute right-3 bottom-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-md transition group-hover:bg-dark group-hover:text-gold">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                            </span>
+                        </div>
+                        <h3 class="mt-4 text-base font-bold">Luxury Villa with Car Porch</h3>
+                        <p class="mt-0.5 text-[0.85rem] text-ink-muted">4 BHK &bull; 3,200 sq ft &bull; ECR, Chennai</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================== CTA BANNER ============================== -->
+        <section class="px-4 pb-20 sm:px-6" id="contact">
+            <div class="reveal bg-blueprint relative mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-dark px-6 py-14 text-white md:px-14 md:py-16">
+                <img src="/static/images/logo-mark.svg" alt="" aria-hidden="true" class="pointer-events-none absolute -right-10 -bottom-10 w-[360px] opacity-[0.08]" />
+                <div class="relative flex flex-wrap items-center justify-between gap-10">
+                    <div>
+                        <p class="mb-3 text-[0.75rem] font-bold tracking-[0.2em] text-gold uppercase">Let's Build Together</p>
+                        <h2 class="text-[1.9rem] leading-tight font-extrabold tracking-tight md:text-[2.6rem]">Ready to start your project?</h2>
+                        <p class="mt-3 text-dark-muted">Get a free consultation and estimate. No obligation.</p>
+                        <div class="mt-8 flex flex-wrap gap-3.5">
+                            <button
+                                data-open-chat
+                                class="group bg-gold-gradient inline-flex items-center gap-2 rounded-xl px-7 py-4 font-bold text-dark shadow-[0_12px_30px_rgba(217,180,94,0.25)] transition hover:-translate-y-0.5 hover:brightness-110"
+                            >
+                                Get a Free Quote
+                                <svg class="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                            </button>
+                            <a
+                                href="mailto:hello@kowshibuilders.example"
+                                class="inline-flex items-center gap-2 rounded-xl border border-white/25 px-7 py-4 font-semibold text-white transition hover:-translate-y-0.5 hover:border-gold hover:text-gold-light"
+                            >
+                                Contact Us
+                            </a>
+                        </div>
+                    </div>
+                    <ul class="grid gap-4 text-sm font-medium text-white/85">
+                        <li class="flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/30 text-gold"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6z" /><path d="m9 12 2 2 4-4" /></svg></span>Trusted &amp; Reliable</li>
+                        <li class="flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/30 text-gold"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.6 5.5 6 .7-4.4 4.1 1.2 6L12 16.4 6.6 19.3l1.2-6L3.4 9.2l6-.7z" /></svg></span>Quality Workmanship</li>
+                        <li class="flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl border border-gold/30 text-gold"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18M9 15l2 2 4-4" /></svg></span>On-Time Delivery</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <!--
-        `defer` tells the browser: "download this script in the background
-        while still parsing the rest of the HTML, but don't RUN it until
-        the whole document is ready." That guarantee matters here - by the
-        time script.js runs, #messages, #chat-form, and #chat-input all
-        already exist in the DOM, so document.getElementById() calls in
-        script.js are safe (they won't return null).
-    -->
-    <script src="/static/script.js" defer></script>
+    <!-- ============================== FOOTER ============================== -->
+    <footer class="bg-dark text-[0.88rem] text-dark-muted">
+        <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+            <div>
+                <a href="#top" class="flex items-center gap-3 no-underline">
+                    <img src="/static/images/logo-mark.svg" alt="" class="h-11 w-auto" width="64" height="48" />
+                    <span class="flex flex-col leading-none">
+                        <span class="font-display text-[1.2rem] font-bold tracking-[0.04em] text-gold-gradient">SRI KOWSHI</span>
+                        <span class="mt-1 text-[0.62rem] font-semibold tracking-[0.42em] text-gold/80">BUILDERS</span>
+                    </span>
+                </a>
+                <p class="mt-5 max-w-[320px] leading-relaxed">Building better tomorrows &mdash; construction, renovation and interiors across Chennai.</p>
+            </div>
+            <div>
+                <h3 class="mb-4 text-xs font-bold tracking-[0.2em] text-white uppercase">Explore</h3>
+                <ul class="grid gap-2.5">
+                    <li><a href="#services" class="hover:text-gold">Services</a></li>
+                    <li><a href="#about" class="hover:text-gold">About &amp; Process</a></li>
+                    <li><a href="#projects" class="hover:text-gold">Projects</a></li>
+                    <li><a href="#" data-open-auth class="hover:text-gold">Client Sign in</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="mb-4 text-xs font-bold tracking-[0.2em] text-white uppercase">Get in Touch</h3>
+                <ul class="grid gap-2.5">
+                    <li><a href="mailto:hello@kowshibuilders.example" class="hover:text-gold">hello@kowshibuilders.example</a></li>
+                    <li>Chennai, Tamil Nadu</li>
+                    <li><button data-open-chat class="font-semibold text-gold hover:text-gold-light">Chat with our assistant &rarr;</button></li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-white/10">
+            <div class="mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-5 text-[0.8rem] sm:px-6">
+                <span>&copy; 2026 Sri Kowshi Builders. All rights reserved.</span>
+                <span class="text-gold/80">Building Better Tomorrows</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================== AUTH MODAL ============================== -->
+    <!-- Opened from the chat's quote summary ("Sign up to track your project")
+         and the header's Sign in link. main.ts drives it. -->
+    <div id="auth-modal" hidden class="fixed inset-0 z-[1100] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <div class="w-full max-w-sm rounded-2xl bg-surface p-6 shadow-[0_12px_40px_rgba(28,25,23,0.2)]">
+            <div class="mb-1 flex items-start justify-between">
+                <h2 id="auth-title" class="m-0 text-xl font-bold">Create your account</h2>
+                <button id="auth-close" type="button" aria-label="Close" class="p-1 text-ink-muted hover:text-ink">
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18" /><path d="M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <p id="auth-subtitle" class="mb-4 mt-0 text-sm text-ink-muted">Track your quote, engineer discussion, site visit and documents in one dashboard.</p>
+
+            <div id="google-wrap" hidden class="mb-4">
+                <div id="google-btn" class="flex justify-center"></div>
+                <div class="my-4 flex items-center gap-3 text-xs text-ink-muted"><span class="h-px flex-1 bg-border"></span>or use email<span class="h-px flex-1 bg-border"></span></div>
+            </div>
+
+            <form id="auth-form" class="flex flex-col gap-3">
+                <input id="auth-name" type="text" placeholder="Full name" autocomplete="name" maxlength="100" class="rounded-lg border border-border bg-bg px-3 py-2.5 text-sm focus:outline-2 focus:outline-accent" />
+                <input id="auth-email" type="email" placeholder="Email" autocomplete="email" required class="rounded-lg border border-border bg-bg px-3 py-2.5 text-sm focus:outline-2 focus:outline-accent" />
+                <input id="auth-password" type="password" placeholder="Password (min 8 characters)" autocomplete="new-password" minlength="8" required class="rounded-lg border border-border bg-bg px-3 py-2.5 text-sm focus:outline-2 focus:outline-accent" />
+                <p id="auth-error" role="alert" hidden class="m-0 text-sm text-red-700"></p>
+                <button id="auth-submit" type="submit" class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60">Sign up</button>
+            </form>
+            <!-- Step 2 of signup: the 5-digit code emailed to the user. -->
+            <form id="otp-form" hidden class="flex flex-col gap-3">
+                <p id="otp-info" class="m-0 text-sm text-ink-muted"></p>
+                <input id="otp-code" type="text" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" placeholder="5-digit code" autocomplete="one-time-code" required class="rounded-lg border border-border bg-bg px-3 py-2.5 text-center text-lg tracking-[0.4em] focus:outline-2 focus:outline-accent" />
+                <p id="otp-error" role="alert" hidden class="m-0 text-sm text-red-700"></p>
+                <button id="otp-submit" type="submit" class="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60">Verify &amp; create account</button>
+                <div class="flex justify-between text-sm">
+                    <button id="otp-resend" type="button" class="font-semibold text-accent-dark hover:underline">Resend code</button>
+                    <button id="otp-back" type="button" class="text-ink-muted hover:underline">Change email</button>
+                </div>
+            </form>
+            <p id="auth-switch-row" class="mb-0 mt-4 text-center text-sm text-ink-muted">
+                <span id="auth-switch-text">Already have an account?</span>
+                <button id="auth-switch" type="button" class="font-semibold text-accent-dark hover:underline">Sign in</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================== CHAT WIDGET ============================== -->
+    <!-- id="messages", "chat-form", "chat-input", ... are the hooks main.ts
+         looks up. Tailwind's reset ships `[hidden] { display:none !important }`,
+         so `hidden` reliably beats the `flex` utility on #chat-panel. -->
+    <div id="chat-widget" class="fixed right-4 bottom-4 z-[1000] font-sans sm:right-6 sm:bottom-6">
+        <button
+            id="chat-launcher"
+            aria-label="Open chat with Sri Kowshi Builders Assistant"
+            aria-expanded="false"
+            class="flex h-[62px] w-[62px] items-center justify-center rounded-full bg-dark text-gold shadow-[0_14px_40px_rgba(12,26,22,0.35)] ring-2 ring-gold/40 transition hover:scale-105 hover:ring-gold"
+        >
+            <svg class="h-[26px] w-[26px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" />
+                <path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" />
+            </svg>
+        </button>
+
+        <div
+            id="chat-panel"
+            hidden
+            class="absolute right-0 bottom-0 flex h-[min(580px,calc(100vh-100px))] w-[min(380px,calc(100vw-32px))] flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-[0_24px_60px_rgba(12,26,22,0.25)]"
+        >
+            <header class="flex shrink-0 items-center justify-between bg-dark px-4 py-3.5 text-white">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 ring-1 ring-gold/40">
+                        <img src="/static/images/logo-mark.svg" alt="" class="h-6 w-auto" width="64" height="48" />
+                    </span>
+                    <div>
+                        <strong class="block text-sm">Sri Kowshi Assistant</strong>
+                        <span class="flex items-center gap-1.5 text-xs text-dark-muted">
+                            <span class="inline-block h-[7px] w-[7px] rounded-full bg-green-400"></span>
+                            Online
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                <button id="chat-new" type="button" aria-label="Start a new chat" title="New chat" class="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-white hover:bg-white/10">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14" /><path d="M5 12h14" /></svg>
+                    New chat
+                </button>
+                <button id="chat-close" aria-label="Close chat" class="flex rounded-md p-1 text-white hover:bg-white/10">
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M18 6 6 18" />
+                        <path d="M6 6l12 12" />
+                    </svg>
+                </button>
+                </div>
+            </header>
+
+            <section id="messages" class="flex flex-1 flex-col gap-2.5 overflow-y-auto bg-bg p-4" aria-live="polite"></section>
+
+            <div id="quick-actions" hidden class="flex flex-wrap gap-2 bg-bg px-4 pb-3">
+                <button type="button" data-quick-message="I'd like a free quote for my project." class="rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-ink hover:border-accent hover:text-accent-dark">Get a Quote</button>
+                <button type="button" data-quick-message="What services do you offer?" class="rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-ink hover:border-accent hover:text-accent-dark">Our Services</button>
+                <button type="button" data-quick-message="How long does construction usually take?" class="rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-ink hover:border-accent hover:text-accent-dark">Project Timeline</button>
+                <button type="button" data-quick-message="Can you give me pricing information?" class="rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-ink hover:border-accent hover:text-accent-dark">Pricing Information</button>
+            </div>
+
+            <form id="chat-form" class="flex shrink-0 gap-2 border-t border-border bg-surface p-3">
+                <input
+                    id="chat-input"
+                    type="text"
+                    placeholder="Type your message..."
+                    autocomplete="off"
+                    required
+                    class="flex-1 rounded-full border border-border bg-bg px-4 py-2.5 text-sm text-ink focus:outline-2 focus:-outline-offset-1 focus:outline-accent"
+                />
+                <button type="submit" aria-label="Send message" class="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-dark text-gold hover:bg-dark-2">
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 2 11 13" />
+                        <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/static/main.js?v=14"></script>
 </body>
 </html>

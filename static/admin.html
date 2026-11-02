@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Admin - Sri Kowshi Builders</title>
+    <link rel="icon" type="image/svg+xml" href="/static/images/logo-mark.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="/static/style.css?v=12" />
+</head>
+<body class="min-h-screen bg-bg font-sans text-ink antialiased">
+    <!-- Sign-in screen: brand panel (the logo artwork) + form. -->
+    <section id="login-screen" hidden class="grid min-h-screen md:grid-cols-2">
+        <!-- Background colours sampled from logo.webp's own edges, and the
+             image's edges are feathered with a mask, so the uncropped logo
+             blends into a panel of any height. -->
+        <div class="hidden items-center justify-center overflow-hidden bg-linear-to-b from-[#112823] to-[#00100c] p-8 md:flex">
+            <img src="/static/images/logo.webp" alt="Sri Kowshi Builders logo" class="w-full max-w-[640px] [mask-image:radial-gradient(ellipse_at_center,black_55%,transparent_75%)]" width="1402" height="1122" />
+        </div>
+        <div class="flex items-center justify-center p-6">
+            <form id="login-form" class="flex w-full max-w-sm flex-col gap-3.5">
+                <img src="/static/images/logo-mark.svg" alt="" class="mb-2 h-12 w-auto self-start" width="64" height="48" />
+                <p class="m-0 text-[0.72rem] font-bold uppercase tracking-[0.2em] text-accent">Admin Console</p>
+                <h1 class="m-0 text-[1.9rem] font-extrabold tracking-tight">Welcome back</h1>
+                <p class="m-0 mb-2 text-sm text-ink-muted">Sign in to manage requests, the calendar and clients for Sri Kowshi Builders.</p>
+                <input id="login-email" type="email" placeholder="Email" autocomplete="username" required class="rounded-xl border border-border bg-surface px-4 py-3 text-sm focus:outline-2 focus:outline-accent" />
+                <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" required class="rounded-xl border border-border bg-surface px-4 py-3 text-sm focus:outline-2 focus:outline-accent" />
+                <p id="login-error" role="alert" hidden class="m-0 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"></p>
+                <button id="login-submit" type="submit" class="mt-1 rounded-xl bg-dark px-4 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(12,26,22,0.25)] transition hover:-translate-y-0.5 hover:bg-dark-2 disabled:opacity-60">Sign in &rarr;</button>
+                <a href="/" class="mt-2 text-center text-sm text-ink-muted hover:text-accent-dark">&larr; Back to website</a>
+            </form>
+        </div>
+    </section>
+
+    <!-- The console itself. -->
+    <div id="console" hidden>
+        <div class="bg-blueprint bg-dark pb-24 text-white">
+            <header class="border-b border-white/10">
+                <div class="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+                    <a href="/" class="flex items-center gap-3 no-underline" aria-label="Sri Kowshi Builders - website">
+                        <img src="/static/images/logo-mark.svg" alt="" class="h-9 w-auto" width="64" height="48" />
+                        <span class="flex flex-col leading-none">
+                            <span class="font-display text-[1.05rem] font-bold tracking-[0.04em] text-gold-gradient">SRI KOWSHI</span>
+                            <span class="mt-1 text-[0.58rem] font-semibold tracking-[0.42em] text-gold/80">ADMIN</span>
+                        </span>
+                    </a>
+                    <div class="flex items-center gap-3 text-sm">
+                        <span id="admin-name" class="hidden font-semibold sm:inline"></span>
+                        <button id="logout" type="button" class="rounded-xl border border-white/20 px-3.5 py-2 font-semibold text-white transition hover:border-gold hover:text-gold-light">Sign out</button>
+                    </div>
+                </div>
+            </header>
+            <div class="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
+                <p class="mb-2 text-[0.72rem] font-bold uppercase tracking-[0.2em] text-gold">Admin Console</p>
+                <h1 class="m-0 text-[1.9rem] font-extrabold tracking-tight md:text-[2.4rem]">Today at Sri Kowshi</h1>
+                <!-- Filled by admin.ts: headline numbers for the day. -->
+                <div id="stats" class="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
+            </div>
+        </div>
+        <main class="relative mx-auto -mt-12 max-w-7xl px-4 pb-16 sm:px-6">
+            <nav id="tabs" class="mb-6 inline-flex flex-wrap gap-1 rounded-2xl border border-border bg-surface p-1 shadow-[0_12px_30px_rgba(12,26,22,0.08)]" aria-label="Admin sections"></nav>
+            <div id="app" class="rounded-3xl border border-border bg-surface p-5 shadow-[0_20px_50px_rgba(12,26,22,0.06)] sm:p-7"><p class="m-0 text-ink-muted">Loading&hellip;</p></div>
+        </main>
+    </div>
+
+    <div id="toast" hidden role="status"></div>
+    <script type="module" src="/static/admin.js?v=3"></script>
+</body>
+</html>

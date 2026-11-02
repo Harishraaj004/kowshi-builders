@@ -1,0 +1,73 @@
+{
+  "compilerOptions": {
+    /* Which JS FEATURES the compiler is allowed to use in its output.
+       ES2020 covers every modern browser we care about (optional
+       chaining, nullish coalescing, etc.) without needing to "downlevel"
+       (rewrite) newer syntax into older, more verbose equivalents. */
+    "target": "ES2020",
+
+    /* "DOM" adds type definitions for browser globals - document,
+       fetch, HTMLElement, localStorage, crypto.randomUUID(), etc. - none
+       of which TypeScript knows about by default (its core library
+       assumes nothing about WHERE the code runs: browser, Node.js,
+       etc). Without this, referencing `document` at all would be a
+       type error. */
+    "lib": ["ES2020", "DOM"],
+
+    /* We're deliberately NOT using a bundler (see frontend/README notes
+       in the project README) - the compiled output is loaded directly
+       by the browser via <script type="module">. Browsers understand
+       ES module `import`/`export` natively, so we keep that syntax in
+       the compiled output instead of rewriting it to CommonJS
+       (`require`/`module.exports`, a Node.js-only format the browser
+       can't run). */
+    "module": "ES2020",
+
+    /* strict turns on a whole bundle of stricter type-checks at once
+       (no implicit `any`, null/undefined must be handled explicitly,
+       etc). Turning this on from day one - rather than adding it later -
+       is what actually teaches you to think about "can this be null?"
+       as you write code, instead of finding out at runtime. */
+    "strict": true,
+
+    /* Where compiled .js files should be written. "../static" points
+       OUTSIDE this frontend/ folder, straight into the same static/
+       directory FastAPI already serves via StaticFiles - no backend
+       changes needed to pick up new frontend output. */
+    "outDir": "../static",
+
+    /* Where to look for .ts source files - keeps the compiler from
+       wandering into node_modules or anywhere else by accident. */
+    "rootDir": "src",
+
+    /* Generates a .js.map file alongside each compiled .js file. This
+       lets browser DevTools show you the ORIGINAL .ts source (with
+       types, comments, your real variable names) when you set
+       breakpoints or read a stack trace, instead of the compiled JS. */
+    "sourceMap": true,
+
+    /* Node.js/npm packages are usually written for CommonJS by default;
+       this flag lets TypeScript interoperate cleanly with them even
+       though we're compiling to ES modules ourselves. We don't import
+       any npm packages into browser code yet, but it's a safe, standard
+       default to leave on. */
+    "esModuleInterop": true,
+
+    /* Catches a common typo/casing mistake on case-insensitive
+       filesystems (like Windows, which is what this project runs on) -
+       e.g. importing "./Main" when the file is actually "main.ts" would
+       work locally but silently break on a case-sensitive filesystem
+       like Linux (where most servers run). */
+    "forceConsistentCasingInFileNames": true,
+
+    /* Fails the build if a .ts file somehow isn't covered by any of
+       these settings cleanly - a general "don't let anything slip
+       through unchecked" safety net. */
+    "skipLibCheck": true
+  },
+
+  /* Only compile files under src/ - not this config file itself, not
+     node_modules (TypeScript already ignores node_modules by default,
+     but being explicit costs nothing). */
+  "include": ["src"]
+}

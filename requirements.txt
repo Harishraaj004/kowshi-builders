@@ -20,3 +20,34 @@ fastapi>=0.115
 # The "[standard]" extra pulls in a couple of performance/dev-convenience
 # extras (like auto-reload support) that we want during development.
 uvicorn[standard]>=0.30
+
+# --- Added in Stage 2 --------------------------------------------------
+
+# python-dotenv: reads a local ".env" file and loads its KEY=value lines
+# as environment variables. This is how we keep our Anthropic API key out
+# of source code (see app/config.py).
+python-dotenv>=1.0
+
+# anthropic: the official Anthropic client library (Claude). We use it to
+# call the Claude API over HTTP without writing the raw request/response
+# handling ourselves (see app/llm.py).
+anthropic>=0.69
+
+# --- Added in this update: PostgreSQL, replacing SQLite -----------------
+
+# psycopg: the official PostgreSQL driver for Python (version 3 - the
+# current generation, simpler and faster than the older "psycopg2"). This
+# is how app/database.py actually talks to Postgres over the network -
+# SQLite was a single FILE our own process read/wrote directly; Postgres
+# is a separate SERVER PROCESS (possibly on a different machine entirely)
+# that we now have to connect to over a network socket, the same way our
+# backend already connects to Anthropic's API.
+# The "[binary]" extra installs a precompiled version - without it, pip
+# would need a C compiler on your machine to build psycopg from source.
+psycopg[binary]>=3.1
+
+# --- Added for accounts & the customer dashboard ------------------------
+
+# python-multipart: lets FastAPI parse multipart/form-data bodies - the
+# format browsers use to upload files (the approval-document uploads).
+python-multipart>=0.0.9

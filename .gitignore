@@ -22,9 +22,38 @@ __pycache__/
 # story: regenerable, machine-local, not meaningful history.
 .pytest_cache/
 
-# Environment variable files. We don't have one yet in Stage 1 (no secrets
-# yet), but this line is here pre-emptively for Stage 2+, when we'll store
-# an LLM API key in a .env file - that file must NEVER be committed to Git,
-# since Git history is effectively permanent and often gets pushed to a
-# public or shared remote.
+# Environment variable files. Holds our real Anthropic API key (see
+# app/config.py) - this file must NEVER be committed to Git, since Git
+# history is effectively permanent and often gets pushed to a public or
+# shared remote. (.env.example, the safe-to-commit template, is NOT
+# listed here on purpose.)
 .env
+
+# (We used to have a SQLite database FILE listed here - kowshi.db. As of
+# this update we use PostgreSQL instead (see app/database.py and
+# app/config.py's DATABASE_URL) - conversation data now lives in a
+# separate Postgres server process, not a file in this project folder at
+# all, so there's nothing file-based left to ignore for it.)
+
+# Node.js dependencies for the frontend build tooling (TypeScript,
+# Tailwind CLI - see frontend/package.json). Same idea as .venv/: huge,
+# machine-specific, and fully regenerable with `npm install` - never
+# committed. (frontend/package-lock.json is DIFFERENT and NOT ignored -
+# lockfiles pin exact versions and SHOULD be committed, the same way
+# requirements.txt is, so everyone building this project gets identical
+# dependency versions.)
+frontend/node_modules/
+
+# NOTE: compiled output in static/ (JS + CSS) is COMMITTED on purpose so Vercel
+# can serve it without a Node build step. Re-run `npm run build` in frontend/
+# and commit the result after changing frontend/src.
+#
+# (Originally ignored) Compiled frontend OUTPUT - generated from frontend/src/*.ts and
+# frontend/src/input.css by `npm run build` (see frontend/package.json).
+# static/index.html is hand-written SOURCE and stays tracked; these three
+# are build artifacts that live in the same folder only because that's
+# where FastAPI's StaticFiles mount already points - regenerate them any
+# time with `npm run build` inside frontend/.
+
+# Customer-uploaded approval documents (see app/config.py UPLOAD_DIR).
+uploads/
