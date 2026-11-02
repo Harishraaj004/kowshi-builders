@@ -256,9 +256,21 @@ def init_db() -> None:
         # including ones we didn't explicitly write a return for. It
         # also does NOT close the connection - we still do that
         # ourselves below, once we're done with it.
+        # Serverless cold starts run this concurrently; serialize them (the
+        # lock is released automatically at commit).
+        connection.execute("SELECT pg_advisory_xact_lock(727274)")
         connection.execute("CREATE SCHEMA IF NOT EXISTS dashboard")
-        # Persist the search_path on the role so pooled connections get it.
-        connection.execute("ALTER ROLE CURRENT_USER SET search_path = dashboard, public")
+        # Persist the search_path on the role so pooled connections get it
+        # (only when missing: concurrent ALTER ROLEs fail with "tuple
+        # concurrently updated").
+        configured = connection.execute(
+            "SELECT 1 FROM pg_roles WHERE rolname = current_user "
+            "AND rolconfig::text LIKE '%search_path=dashboard%'"
+        ).fetchone()
+        if not configured:
+            connection.execute(
+                "ALTER ROLE CURRENT_USER SET search_path = dashboard, public"
+            )
         connection.execute(SCHEMA_SQL)
         connection.commit()
     connection.close()
