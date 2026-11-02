@@ -50,7 +50,8 @@ def _is_pooled(url: str) -> bool:
 
 def _direct_url() -> str:
     """Non-pooled URL: Neon's DATABASE_URL_UNPOOLED, else DATABASE_URL minus "-pooler"."""
-    return os.getenv("DATABASE_URL_UNPOOLED") or DATABASE_URL.replace("-pooler.", ".", 1)
+    unpooled = os.getenv("DATABASE_URL_UNPOOLED", "").strip().strip("\"'")
+    return unpooled or DATABASE_URL.replace("-pooler.", ".", 1)
 
 
 def get_connection(direct: bool = False) -> psycopg.Connection:

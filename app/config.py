@@ -83,10 +83,12 @@ ANTHROPIC_MODEL_ID = "claude-opus-5"
 # still read from the environment first - so a teammate, or a real
 # deployment, can point at a completely different Postgres server just by
 # setting DATABASE_URL, with zero code changes.
+# .strip(...) tolerates values pasted/imported WITH surrounding quotes, as in a
+# dotenv file (e.g. Vercel's "import .env" keeps the quote characters).
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://postgres:root@localhost:5433/kowshi_builders",
-)
+).strip().strip("\"'")
 
 # --- Accounts & dashboard --------------------------------------------------
 # Google Sign-In: the OAuth "Web application" client ID from
