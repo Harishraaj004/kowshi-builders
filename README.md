@@ -14,11 +14,10 @@ A website for a construction business with an AI chat agent (Claude), customer a
 ## Project layout
 
 ```
-api/index.py        Vercel serverless entrypoint (re-exports the FastAPI app)
 app/                FastAPI backend (main, auth, admin, projects, llm, tools, database, config, emailer)
 frontend/           TypeScript + Tailwind sources and build tooling
 static/             HTML pages and compiled JS/CSS served by FastAPI
-vercel.json         Vercel routing / bundling config
+vercel.json         Vercel config (function region)
 .env.example        Template of all environment variables
 ```
 
