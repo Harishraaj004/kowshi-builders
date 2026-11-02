@@ -1,0 +1,127 @@
+/*
+  static/style.css
+  =================
+  CSS ("Cascading Style Sheets") controls the visual presentation of the
+  HTML elements defined in index.html: colours, spacing, layout, fonts.
+  "Cascading" refers to how rules can override each other based on
+  specificity and order - not something we need to worry about at this
+  small scale, but it's why the name is what it is.
+*/
+
+/* `*` is the universal selector - this rule applies to EVERY element.
+   box-sizing: border-box changes how width/height are calculated so that
+   padding and border are included INSIDE the stated width, instead of
+   being added on top of it. Almost every real-world CSS project sets
+   this globally because the default behaviour is rarely what you want. */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    /* A generic, cross-platform font stack: try the system's default UI
+       font first, then fall back through a few common alternatives. */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: #0f172a;   /* dark navy background */
+    color: #e2e8f0;              /* light grey text, for contrast */
+    margin: 0;                   /* remove the browser's default body margin */
+    display: flex;               /* use Flexbox to center our chat widget... */
+    justify-content: center;     /* ...horizontally... */
+    align-items: center;         /* ...and vertically... */
+    min-height: 100vh;           /* ...within the full height of the viewport */
+}
+
+.chat-app {
+    width: 100%;
+    max-width: 480px;
+    margin: 24px;
+    background-color: #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;      /* stack header / messages / form vertically */
+    gap: 16px;                   /* space between those three sections */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.subtitle {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;            /* scroll if the conversation grows tall */
+}
+
+/* Every message bubble script.js creates gets this base class... */
+.message {
+    padding: 10px 14px;
+    border-radius: 10px;
+    max-width: 85%;
+    line-height: 1.4;
+    word-wrap: break-word;       /* don't let a long word overflow the bubble */
+}
+
+/* ...plus ONE of these two, depending on who "said" it. This is the same
+   pattern almost every chat app UI uses: align your own messages one way,
+   the other side's messages the other way. */
+.message.user {
+    align-self: flex-end;        /* push to the right side */
+    background-color: #2563eb;
+    color: white;
+}
+
+.message.agent {
+    align-self: flex-start;      /* keep on the left side */
+    background-color: #334155;
+    color: #e2e8f0;
+}
+
+.chat-form {
+    display: flex;
+    gap: 8px;
+}
+
+#chat-input {
+    flex: 1;                     /* grow to fill all available space, so
+                                     the button just takes its natural width */
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background-color: #0f172a;
+    color: #e2e8f0;
+    font-size: 1rem;
+}
+
+#chat-input:focus {
+    outline: 2px solid #2563eb;  /* visible focus ring for accessibility */
+}
+
+button[type="submit"] {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #2563eb;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #1d4ed8;
+}
+
+button[type="submit"]:disabled {
+    background-color: #475569;
+    cursor: not-allowed;
+}

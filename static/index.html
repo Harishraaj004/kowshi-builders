@@ -1,0 +1,73 @@
+<!--
+  static/index.html
+  ==================
+  This is the file the browser loads first when you visit the site. It
+  defines the STRUCTURE of the page - what elements exist and how they're
+  nested - while style.css controls how it LOOKS, and script.js controls
+  how it BEHAVES (reacts to clicks, talks to the backend, updates itself).
+
+  Structure / style / behaviour, kept in three separate files, is a
+  deliberate convention in web dev - it means you (or anyone else) can
+  redesign the look without touching the logic, or change the logic
+  without touching the markup.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <!-- Without this, mobile browsers assume the page was built for a wide
+         desktop screen and shrink everything down. This line tells the
+         browser: "match the viewport width to the actual device width,
+         and don't zoom in by default." -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kowshi Builders - Chat (Stage 1)</title>
+
+    <!-- This tells the browser to fetch our CSS file as a SEPARATE HTTP
+         request (to /static/style.css), served by the StaticFiles mount
+         we set up in app/main.py. Open your browser's Network tab while
+         loading this page and you'll see that request happen. -->
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <!-- One container <main> for the whole chat widget, so we can center
+         and size it as a single block in CSS. -->
+    <main class="chat-app">
+        <header>
+            <h1>Kowshi Builders</h1>
+            <p class="subtitle">Stage 1 - plain HTTP/JSON plumbing. No AI yet.</p>
+        </header>
+
+        <!-- Empty on page load. script.js will append a new <div> in here
+             for every message (yours and the backend's canned reply).
+             aria-live="polite" is an accessibility hint: it tells screen
+             readers "announce new content added here, but don't interrupt
+             whatever the user is currently doing." -->
+        <section id="messages" class="messages" aria-live="polite"></section>
+
+        <!-- Wrapping the input + button in a <form> means the browser
+             handles "press Enter to submit" for us automatically, and
+             gives script.js a single "submit" event to listen for instead
+             of separately handling Enter-key-presses and button-clicks. -->
+        <form id="chat-form" class="chat-form">
+            <input
+                id="chat-input"
+                type="text"
+                placeholder="Type a message..."
+                autocomplete="off"
+                required
+            />
+            <button type="submit">Send</button>
+        </form>
+    </main>
+
+    <!--
+        `defer` tells the browser: "download this script in the background
+        while still parsing the rest of the HTML, but don't RUN it until
+        the whole document is ready." That guarantee matters here - by the
+        time script.js runs, #messages, #chat-form, and #chat-input all
+        already exist in the DOM, so document.getElementById() calls in
+        script.js are safe (they won't return null).
+    -->
+    <script src="/static/script.js" defer></script>
+</body>
+</html>

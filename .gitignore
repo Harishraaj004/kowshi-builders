@@ -1,0 +1,30 @@
+# .gitignore
+# ==========
+# Tells Git which files/folders to NEVER track, even if they exist in the
+# project folder. Without this, `git add .` would try to commit thousands
+# of virtual-environment files and compiled bytecode that don't belong in
+# version control - they're either machine-specific, huge, or fully
+# regenerable from other files that ARE tracked.
+
+# The virtual environment: a self-contained copy of Python + installed
+# packages, tied to THIS machine's OS/paths. Anyone cloning this repo
+# recreates it themselves with `python -m venv .venv` + `pip install -r
+# requirements.txt` - it should never be committed.
+.venv/
+
+# Python's compiled bytecode cache. Python creates these automatically
+# next to any .py file it runs, purely as a speed optimization - they're
+# regenerated automatically and are meaningless outside this exact machine.
+__pycache__/
+*.pyc
+
+# pytest's cache directory (created once we start writing tests) - same
+# story: regenerable, machine-local, not meaningful history.
+.pytest_cache/
+
+# Environment variable files. We don't have one yet in Stage 1 (no secrets
+# yet), but this line is here pre-emptively for Stage 2+, when we'll store
+# an LLM API key in a .env file - that file must NEVER be committed to Git,
+# since Git history is effectively permanent and often gets pushed to a
+# public or shared remote.
+.env

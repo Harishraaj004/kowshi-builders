@@ -1,0 +1,22 @@
+# requirements.txt
+# =================
+# This file lists every third-party Python package our project depends on,
+# and (loosely) which versions are OK. It exists so that:
+#   1. YOU can recreate the exact same environment on another machine by
+#      running: pip install -r requirements.txt
+#   2. Anyone else (a teammate, a deploy server, future-you) can do the same
+#      without having to guess what to install.
+#
+# This is the Python equivalent of package.json in the JS world.
+
+# FastAPI: the web framework itself - lets us define HTTP routes as plain
+# Python functions (see app/main.py).
+fastapi>=0.115
+
+# Uvicorn: the actual server program that runs our FastAPI app and speaks
+# HTTP to the outside world. FastAPI describes WHAT to do with a request;
+# Uvicorn is the program that actually accepts network connections and
+# hands requests to FastAPI.
+# The "[standard]" extra pulls in a couple of performance/dev-convenience
+# extras (like auto-reload support) that we want during development.
+uvicorn[standard]>=0.30
